@@ -1,4 +1,14 @@
-import Database from "better-sqlite3";
+/**
+ * db.ts — Pure JSON file store (no native bindings).
+ *
+ * Replaced better-sqlite3 (native C++ addon) with a plain JSON file so the
+ * app runs on Vercel serverless without any native-binding issues.
+ *
+ * Storage path:
+ *   Vercel  → /tmp/circulars.json   (writable; ephemeral per Lambda instance)
+ *   Local   → data/circulars.json
+ */
+import fs from "fs";
 import path from "path";
 
 export interface Circular {
@@ -17,121 +27,82 @@ export interface Circular {
   action_items?: string;    // JSON array stored as text
   evidence?: string;        // JSON array stored as text
   // PDF pipeline fields
-  is_pdf?: number;          // 1 = PDF, 0 = HTML (SQLite integer boolean)
-  pdf_path?: string;        // local file path under /data/pdfs/
-  extracted_text?: string;  // raw text from pdf-parse or OCR
+  is_pdf?: number;          // 1 = PDF, 0 = HTML
+  pdf_path?: string;
+  extracted_text?: string;
   structured_chunks?: string; // JSON: TextChunk[]
   // Review tracking
   reviewed?: number;        // 1 = reviewed, 0 = unreviewed
 }
 
-let _db: Database.Database | null = null;
+const DB_PATH = process.env.VERCEL
+  ? "/tmp/circulars.json"
+  : path.join(process.cwd(), "data", "circulars.json");
 
-function getDB(): Database.Database {
-  if (_db) return _db;
-  // Vercel's filesystem is read-only except for /tmp; use /tmp there.
-  const dbPath = process.env.VERCEL
-    ? "/tmp/circulars.db"
-    : path.join(process.cwd(), "data", "circulars.db");
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const fs = require("fs");
-  fs.mkdirSync(path.dirname(dbPath), { recursive: true });
-  _db = new Database(dbPath);
-  return _db;
+function ensureDir(): void {
+  fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
+}
+
+function readAll(): Circular[] {
+  try {
+    ensureDir();
+    if (!fs.existsSync(DB_PATH)) return [];
+    return JSON.parse(fs.readFileSync(DB_PATH, "utf-8")) as Circular[];
+  } catch {
+    return [];
+  }
+}
+
+function writeAll(data: Circular[]): void {
+  ensureDir();
+  fs.writeFileSync(DB_PATH, JSON.stringify(data), "utf-8");
 }
 
 export function initDB(): void {
-  const db = getDB();
-
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS circulars (
-      id               TEXT PRIMARY KEY,
-      source           TEXT NOT NULL,
-      title            TEXT NOT NULL,
-      link             TEXT NOT NULL,
-      date             TEXT DEFAULT '',
-      created_at       TEXT DEFAULT (datetime('now')),
-      content          TEXT,
-      summary          TEXT,
-      relevance        TEXT,
-      why_it_matters   TEXT,
-      action_items     TEXT,
-      evidence         TEXT,
-      is_pdf           INTEGER DEFAULT 0,
-      pdf_path         TEXT,
-      extracted_text   TEXT,
-      structured_chunks TEXT
-    )
-  `);
-
-  // Migrate existing tables that may be missing columns
-  const existing = (
-    db.prepare("PRAGMA table_info(circulars)").all() as { name: string }[]
-  ).map((c) => c.name);
-
-  const required: [string, string][] = [
-    ["content", "TEXT"],
-    ["summary", "TEXT"],
-    ["relevance", "TEXT"],
-    ["why_it_matters", "TEXT"],
-    ["action_items", "TEXT"],
-    ["evidence", "TEXT"],
-    ["is_pdf", "INTEGER DEFAULT 0"],
-    ["pdf_path", "TEXT"],
-    ["extracted_text", "TEXT"],
-    ["structured_chunks", "TEXT"],
-    ["reviewed", "INTEGER DEFAULT 0"],
-  ];
-
-  for (const [col, def] of required) {
-    if (!existing.includes(col)) {
-      db.exec(`ALTER TABLE circulars ADD COLUMN ${col} ${def}`);
-      console.log(`[DB] Migrated: added column ${col}`);
-    }
+  if (!fs.existsSync(DB_PATH)) {
+    ensureDir();
+    writeAll([]);
   }
-
   console.log("[DB] Initialized");
 }
 
 export function insertCirculars(circulars: Circular[]): number {
-  const db = getDB();
-  const insert = db.prepare(`
-    INSERT OR IGNORE INTO circulars (id, source, title, link, date)
-    VALUES (@id, @source, @title, @link, @date)
-  `);
+  const existing = readAll();
+  const existingIds = new Set(existing.map((c) => c.id));
+  const now = new Date().toISOString();
 
-  let inserted = 0;
-  const insertMany = db.transaction((items: Circular[]) => {
-    for (const item of items) {
-      const result = insert.run(item);
-      if (result.changes > 0) inserted++;
-    }
-  });
+  const fresh = circulars
+    .filter((c) => !existingIds.has(c.id))
+    .map((c) => ({ ...c, created_at: now }));
 
-  insertMany(circulars);
-  return inserted;
+  if (fresh.length > 0) {
+    // Prepend so newest first (matches ORDER BY created_at DESC)
+    writeAll([...fresh, ...existing]);
+  }
+  return fresh.length;
 }
 
 export function getAllCirculars(): Circular[] {
-  const db = getDB();
-  return db
-    .prepare(`SELECT * FROM circulars ORDER BY created_at DESC`)
-    .all() as Circular[];
+  return readAll().sort((a, b) => {
+    const ta = a.created_at ? new Date(a.created_at).getTime() : 0;
+    const tb = b.created_at ? new Date(b.created_at).getTime() : 0;
+    return tb - ta;
+  });
 }
 
 export function getCircularById(id: string): Circular | null {
-  const db = getDB();
-  const row = db.prepare(`SELECT * FROM circulars WHERE id = ?`).get(id);
-  return (row as Circular) ?? null;
+  return readAll().find((c) => c.id === id) ?? null;
 }
 
 export function getUnprocessedCirculars(limit = 10): Circular[] {
-  const db = getDB();
-  return db
-    .prepare(
-      `SELECT * FROM circulars WHERE summary IS NULL ORDER BY created_at DESC LIMIT ?`
-    )
-    .all(limit) as Circular[];
+  return readAll()
+    .filter((c) => !c.summary)
+    .sort((a, b) => {
+      const ta = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const tb = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return tb - ta;
+    })
+    .slice(0, limit);
 }
 
 /** Store PDF pipeline results (download + parse + structure). */
@@ -141,33 +112,31 @@ export function updateCircularPDF(
     is_pdf: boolean;
     pdf_path: string | null;
     extracted_text: string;
-    structured_chunks: string; // JSON string
+    structured_chunks: string;
   }
 ): void {
-  const db = getDB();
-  db.prepare(`
-    UPDATE circulars
-    SET is_pdf           = @is_pdf,
-        pdf_path         = @pdf_path,
-        extracted_text   = @extracted_text,
-        structured_chunks = @structured_chunks
-    WHERE id = @id
-  `).run({
-    id,
-    is_pdf: fields.is_pdf ? 1 : 0,
-    pdf_path: fields.pdf_path,
-    extracted_text: fields.extracted_text,
-    structured_chunks: fields.structured_chunks,
-  });
+  const data = readAll();
+  const idx = data.findIndex((c) => c.id === id);
+  if (idx !== -1) {
+    data[idx] = {
+      ...data[idx],
+      is_pdf: fields.is_pdf ? 1 : 0,
+      pdf_path: fields.pdf_path ?? undefined,
+      extracted_text: fields.extracted_text,
+      structured_chunks: fields.structured_chunks,
+    };
+    writeAll(data);
+  }
 }
 
 /** Set reviewed flag for a circular. */
 export function setReviewed(id: string, reviewed: boolean): void {
-  const db = getDB();
-  db.prepare(`UPDATE circulars SET reviewed = ? WHERE id = ?`).run(
-    reviewed ? 1 : 0,
-    id
-  );
+  const data = readAll();
+  const idx = data.findIndex((c) => c.id === id);
+  if (idx !== -1) {
+    data[idx] = { ...data[idx], reviewed: reviewed ? 1 : 0 };
+    writeAll(data);
+  }
 }
 
 /** Store AI analysis results. */
@@ -182,23 +151,18 @@ export function updateCircularAI(
     evidence: string[];
   }
 ): void {
-  const db = getDB();
-  db.prepare(`
-    UPDATE circulars
-    SET content        = @content,
-        summary        = @summary,
-        relevance      = @relevance,
-        why_it_matters = @why_it_matters,
-        action_items   = @action_items,
-        evidence       = @evidence
-    WHERE id = @id
-  `).run({
-    id,
-    content: fields.content ?? null,
-    summary: fields.summary,
-    relevance: fields.relevance,
-    why_it_matters: fields.why_it_matters,
-    action_items: JSON.stringify(fields.action_items),
-    evidence: JSON.stringify(fields.evidence),
-  });
+  const data = readAll();
+  const idx = data.findIndex((c) => c.id === id);
+  if (idx !== -1) {
+    data[idx] = {
+      ...data[idx],
+      content: fields.content ?? data[idx].content,
+      summary: fields.summary,
+      relevance: fields.relevance,
+      why_it_matters: fields.why_it_matters,
+      action_items: JSON.stringify(fields.action_items),
+      evidence: JSON.stringify(fields.evidence),
+    };
+    writeAll(data);
+  }
 }

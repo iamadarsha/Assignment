@@ -31,7 +31,7 @@ const nextConfig: NextConfig = {
   // Ensure server-only env vars are never bundled into the client.
   // GEMINI_API_KEY and GROQ_API_KEY lack the NEXT_PUBLIC_ prefix
   // so Next.js already excludes them, but this is an explicit safety net.
-  serverExternalPackages: ["better-sqlite3", "pdf-parse", "tesseract.js"],
+  serverExternalPackages: ["pdf-parse", "tesseract.js"],
 };
 
 export default nextConfig;
