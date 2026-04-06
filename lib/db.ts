@@ -29,7 +29,10 @@ let _db: Database.Database | null = null;
 
 function getDB(): Database.Database {
   if (_db) return _db;
-  const dbPath = path.join(process.cwd(), "data", "circulars.db");
+  // Vercel's filesystem is read-only except for /tmp; use /tmp there.
+  const dbPath = process.env.VERCEL
+    ? "/tmp/circulars.db"
+    : path.join(process.cwd(), "data", "circulars.db");
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const fs = require("fs");
   fs.mkdirSync(path.dirname(dbPath), { recursive: true });

@@ -16,8 +16,11 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  output: "standalone",
-  outputFileTracingRoot: path.join(__dirname),
+  // "standalone" is needed for Docker/Fly.io but breaks Vercel — only enable for Docker builds.
+  ...(process.env.BUILD_TARGET === "docker" && {
+    output: "standalone",
+    outputFileTracingRoot: path.join(__dirname),
+  }),
 
   async headers() {
     return [
