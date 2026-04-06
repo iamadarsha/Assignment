@@ -1,7 +1,6 @@
+// No PostCSS plugins needed — Tailwind removed, all styles are inline
 const config = {
-  plugins: {
-    "@tailwindcss/postcss": {},
-  },
+  plugins: {},
 };
 
 export default config;

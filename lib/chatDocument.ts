@@ -215,25 +215,31 @@ QUESTION: ${question}`;
         }))
       : [];
 
-    const confidence = (["HIGH", "MEDIUM", "LOW"] as const).includes(
-      parsed.confidence as "HIGH"
-    )
-      ? (parsed.confidence as "HIGH" | "MEDIUM" | "LOW")
-      : "MEDIUM";
+    const rawAnswer = String(parsed.answer ?? "");
 
     const status =
-      parsed.status === "INSUFFICIENT_EVIDENCE"
+      parsed.status === "INSUFFICIENT_EVIDENCE" ||
+      rawAnswer.toLowerCase().startsWith("not found")
         ? "INSUFFICIENT_EVIDENCE" as const
         : degraded
           ? "DEGRADED" as const
           : "OK" as const;
 
-    return {
-      answer: String(parsed.answer ?? ""),
-      evidence,
-      confidence,
-      status,
-    };
+    // Force LOW confidence when the AI couldn't find the answer
+    const aiConfidence = (["HIGH", "MEDIUM", "LOW"] as const).includes(
+      parsed.confidence as "HIGH"
+    )
+      ? (parsed.confidence as "HIGH" | "MEDIUM" | "LOW")
+      : "MEDIUM";
+    const confidence = status === "INSUFFICIENT_EVIDENCE" ? "LOW" : aiConfidence;
+
+    // Humanise "not found" response
+    const answer =
+      status === "INSUFFICIENT_EVIDENCE" && evidence.length === 0
+        ? "The document sections available don't contain a direct answer to this question. Try asking about specific terms from the summary or action items above."
+        : rawAnswer;
+
+    return { answer, evidence, confidence, status };
   } catch {
     return {
       answer: raw.slice(0, 500),

@@ -21,6 +21,8 @@ export interface Circular {
   pdf_path?: string;        // local file path under /data/pdfs/
   extracted_text?: string;  // raw text from pdf-parse or OCR
   structured_chunks?: string; // JSON: TextChunk[]
+  // Review tracking
+  reviewed?: number;        // 1 = reviewed, 0 = unreviewed
 }
 
 let _db: Database.Database | null = null;
@@ -75,6 +77,7 @@ export function initDB(): void {
     ["pdf_path", "TEXT"],
     ["extracted_text", "TEXT"],
     ["structured_chunks", "TEXT"],
+    ["reviewed", "INTEGER DEFAULT 0"],
   ];
 
   for (const [col, def] of required) {
@@ -153,6 +156,15 @@ export function updateCircularPDF(
     extracted_text: fields.extracted_text,
     structured_chunks: fields.structured_chunks,
   });
+}
+
+/** Set reviewed flag for a circular. */
+export function setReviewed(id: string, reviewed: boolean): void {
+  const db = getDB();
+  db.prepare(`UPDATE circulars SET reviewed = ? WHERE id = ?`).run(
+    reviewed ? 1 : 0,
+    id
+  );
 }
 
 /** Store AI analysis results. */

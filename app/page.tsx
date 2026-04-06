@@ -20,6 +20,7 @@ interface Circular {
   is_pdf: number | null;
   extracted_text: string | null;
   structured_chunks: string | null;
+  reviewed: number | null; // 1 = reviewed in DB
 }
 
 interface ChatEvidence {
@@ -41,7 +42,7 @@ interface ChatState {
   error: string | null;
 }
 
-type RelevanceFilter = "ALL" | "HIGH" | "MEDIUM" | "LOW";
+type RelevanceFilter = "ALL" | "HIGH" | "MEDIUM" | "LOW" | "NOT RELEVANT";
 type ReviewFilter = "all" | "unreviewed" | "reviewed";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -157,13 +158,16 @@ function ConfidenceBadge({ confidence }: { confidence: string }) {
         color: s.color,
       }}
     >
-      {confidence}
+      {confidence} confidence
     </span>
   );
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const label = status === "DEGRADED" ? "Fallback provider" : "Limited evidence";
+  const map: Record<string, string> = {
+    DEGRADED: "Fallback provider",
+    INSUFFICIENT_EVIDENCE: "Limited evidence",
+  };
   return (
     <span
       style={{
@@ -175,7 +179,7 @@ function StatusBadge({ status }: { status: string }) {
         color: "#991B1B",
       }}
     >
-      {label}
+      {map[status] ?? status}
     </span>
   );
 }
@@ -216,7 +220,7 @@ function DocumentChat({
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && submit()}
             onClick={(e) => e.stopPropagation()}
-            placeholder="Ask about this document..."
+            placeholder="Ask about this document…"
             disabled={state.loading}
             style={{
               flex: 1,
@@ -240,16 +244,16 @@ function DocumentChat({
               padding: "8px 14px",
               fontSize: 12,
               fontWeight: 500,
-              background: state.loading ? "#D2D2D7" : "#1D1D1F",
+              background: state.loading || !input.trim() ? "#D2D2D7" : "#1D1D1F",
               color: "#FFFFFF",
               border: "none",
               borderRadius: 8,
-              cursor: state.loading ? "default" : "pointer",
+              cursor: state.loading || !input.trim() ? "default" : "pointer",
               transition: "background 150ms ease",
               whiteSpace: "nowrap",
             }}
           >
-            {state.loading ? "Thinking..." : "Ask"}
+            {state.loading ? "Thinking…" : "Ask"}
           </button>
         </div>
 
@@ -270,7 +274,7 @@ function DocumentChat({
             }}
           >
             {/* Badges */}
-            <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+            <div style={{ display: "flex", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
               <ConfidenceBadge confidence={state.response.confidence} />
               {state.response.status !== "OK" && (
                 <StatusBadge status={state.response.status} />
@@ -281,9 +285,10 @@ function DocumentChat({
             <p
               style={{
                 fontSize: 13,
-                color: "#1D1D1F",
+                color: state.response.status === "INSUFFICIENT_EVIDENCE" ? "#6B7280" : "#1D1D1F",
                 lineHeight: 1.65,
                 margin: 0,
+                fontStyle: state.response.status === "INSUFFICIENT_EVIDENCE" ? "italic" : "normal",
               }}
             >
               {state.response.answer}
@@ -291,14 +296,7 @@ function DocumentChat({
 
             {/* Evidence citations */}
             {state.response.evidence.length > 0 && (
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 6,
-                  marginTop: 12,
-                }}
-              >
+              <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 12 }}>
                 {state.response.evidence.map((ev, i) => (
                   <blockquote
                     key={i}
@@ -390,22 +388,23 @@ function CircularCard({
     <article
       style={{
         background: "#FFFFFF",
-        border: "1px solid #E5E5EA",
+        border: `1px solid ${isExpanded ? "#D2D2D7" : "#E5E5EA"}`,
         borderRadius: 14,
         overflow: "hidden",
-        opacity: isReviewed ? 0.55 : 1,
-        transition: "opacity 250ms ease, box-shadow 200ms ease",
-        boxShadow: hovered && !isReviewed ? "0 2px 12px rgba(0,0,0,0.07)" : "none",
+        opacity: isReviewed && !isExpanded ? 0.55 : 1,
+        transition: "opacity 250ms ease, box-shadow 200ms ease, border-color 200ms ease",
+        boxShadow: hovered && !isReviewed ? "0 2px 12px rgba(0,0,0,0.07)" : isExpanded ? "0 4px 20px rgba(0,0,0,0.08)" : "none",
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {/* Header row */}
+      {/* Header row — clickable to expand/collapse */}
       <div
         role="button"
         tabIndex={0}
         onClick={onToggleExpand}
         onKeyDown={(e) => e.key === "Enter" && onToggleExpand()}
+        aria-expanded={isExpanded}
         style={{
           display: "flex",
           alignItems: "flex-start",
@@ -437,24 +436,17 @@ function CircularCard({
                 fontSize: 13,
                 color: "#6E6E73",
                 lineHeight: 1.5,
-                overflow: "hidden",
+                overflow: isExpanded ? "visible" : "hidden",
                 display: "-webkit-box",
-                WebkitLineClamp: isExpanded ? undefined : 2,
+                WebkitLineClamp: isExpanded ? "unset" : 2,
                 WebkitBoxOrient: "vertical",
-              }}
+              } as React.CSSProperties}
             >
               {circular.why_it_matters}
             </p>
           ) : !isProcessed ? (
-            <p
-              style={{
-                margin: "4px 0 0",
-                fontSize: 12,
-                color: "#C0BFC4",
-                fontStyle: "italic",
-              }}
-            >
-              Not yet analyzed
+            <p style={{ margin: "4px 0 0", fontSize: 12, color: "#C0BFC4", fontStyle: "italic" }}>
+              Not yet analyzed — click &ldquo;Process AI&rdquo; to analyze
             </p>
           ) : null}
         </div>
@@ -490,26 +482,45 @@ function CircularCard({
           <span style={{ fontSize: 11, color: "#9CA3AF" }}>
             {formatDate(circular.date || circular.created_at)}
           </span>
-          <button
-            onClick={onToggleReviewed}
-            style={{
-              fontSize: 11,
-              color: isReviewed ? "#34C759" : "#C0BFC4",
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              padding: 0,
-              fontWeight: isReviewed ? 600 : 400,
-              transition: "color 200ms ease",
-            }}
-          >
-            {isReviewed ? "✓ Reviewed" : "Mark reviewed"}
-          </button>
+
+          {/* Expand chevron */}
+          <span style={{ fontSize: 10, color: "#C0BFC4", transition: "transform 200ms ease", display: "inline-block", transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)" }}>
+            ▾
+          </span>
         </div>
       </div>
 
+      {/* Mark reviewed — sits just below header, full-width, always visible */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          padding: "0 20px 12px",
+          marginTop: -4,
+        }}
+      >
+        <button
+          onClick={onToggleReviewed}
+          style={{
+            fontSize: 11,
+            color: isReviewed ? "#34C759" : "#C0BFC4",
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            padding: 0,
+            fontWeight: isReviewed ? 600 : 400,
+            transition: "color 200ms ease",
+          }}
+        >
+          {isReviewed ? "✓ Reviewed" : "Mark reviewed"}
+        </button>
+      </div>
+
       {/* Expanded body */}
-      <div className="card-expand" style={{ maxHeight: isExpanded ? 4000 : 0 }}>
+      <div
+        className="card-expand"
+        style={{ maxHeight: isExpanded ? 5000 : 0 }}
+      >
         <div
           style={{
             borderTop: "1px solid #F0F0F3",
@@ -519,6 +530,25 @@ function CircularCard({
             gap: 22,
           }}
         >
+          {/* Relevance badge */}
+          {circular.relevance && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  padding: "3px 10px",
+                  borderRadius: 6,
+                  background: RELEVANCE_DOT[circular.relevance] + "18",
+                  color: RELEVANCE_DOT[circular.relevance] ?? "#6B7280",
+                  letterSpacing: "0.04em",
+                }}
+              >
+                {circular.relevance} RELEVANCE
+              </span>
+            </div>
+          )}
+
           {/* Summary */}
           {circular.summary && (
             <section>
@@ -532,14 +562,14 @@ function CircularCard({
           {/* Action items */}
           {actionItems.length > 0 && (
             <section>
-              <SectionLabel>Action Items</SectionLabel>
+              <SectionLabel>Action Items for Glomopay</SectionLabel>
               <ul
                 style={{
                   margin: 0,
                   padding: "0 0 0 18px",
                   display: "flex",
                   flexDirection: "column",
-                  gap: 7,
+                  gap: 8,
                 }}
               >
                 {actionItems.map((item, i) => (
@@ -554,7 +584,7 @@ function CircularCard({
           {/* Evidence */}
           {evidence.length > 0 && (
             <section>
-              <SectionLabel>Evidence</SectionLabel>
+              <SectionLabel>Evidence from Document</SectionLabel>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {evidence.map((line, i) => (
                   <blockquote
@@ -579,10 +609,10 @@ function CircularCard({
             </section>
           )}
 
-          {/* Not processed */}
+          {/* Not processed yet */}
           {!isProcessed && (
             <p style={{ fontSize: 13, color: "#9CA3AF", fontStyle: "italic" }}>
-              Run &ldquo;Process AI&rdquo; to analyze this circular.
+              Click &ldquo;Process AI&rdquo; above to generate the summary, relevance score, and action items for this circular.
             </p>
           )}
 
@@ -596,7 +626,7 @@ function CircularCard({
               style={{
                 display: "inline-flex",
                 alignItems: "center",
-                gap: 3,
+                gap: 4,
                 fontSize: 12,
                 color: "#007AFF",
                 textDecoration: "none",
@@ -629,7 +659,7 @@ function SegmentedControl<T extends string>({
   value,
   onChange,
 }: {
-  options: { value: T; label: string }[];
+  options: { value: T; label: string; count?: number }[];
   value: T;
   onChange: (v: T) => void;
 }) {
@@ -660,9 +690,29 @@ function SegmentedControl<T extends string>({
               cursor: "pointer",
               transition: "background 150ms ease, color 150ms ease",
               boxShadow: active ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
+              display: "flex",
+              alignItems: "center",
+              gap: 5,
             }}
           >
             {opt.label}
+            {opt.count !== undefined && opt.count > 0 && (
+              <span
+                style={{
+                  fontSize: 10,
+                  fontWeight: 600,
+                  background: active ? "#1D1D1F" : "#C7C7CC",
+                  color: "#FFFFFF",
+                  borderRadius: 8,
+                  padding: "0 5px",
+                  minWidth: 16,
+                  textAlign: "center",
+                  lineHeight: "15px",
+                }}
+              >
+                {opt.count}
+              </span>
+            )}
           </button>
         );
       })}
@@ -688,16 +738,8 @@ function TopButton({
   const [hovered, setHovered] = useState(false);
 
   const bg = primary
-    ? loading
-      ? "#888"
-      : hovered
-        ? "#333"
-        : "#1D1D1F"
-    : loading
-      ? "#F5F5F7"
-      : hovered
-        ? "#EBEBF0"
-        : "#FFFFFF";
+    ? loading ? "#888" : hovered ? "#333" : "#1D1D1F"
+    : loading ? "#F5F5F7" : hovered ? "#EBEBF0" : "#FFFFFF";
 
   const color = primary ? "#FFFFFF" : loading ? "#9CA3AF" : "#1D1D1F";
 
@@ -737,6 +779,8 @@ export default function Home() {
   const [relevanceFilter, setRelevanceFilter] = useState<RelevanceFilter>("ALL");
   const [reviewFilter, setReviewFilter] = useState<ReviewFilter>("all");
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  // reviewed is initialized from DB on load, then kept in sync via API
   const [reviewed, setReviewed] = useState<Set<string>>(new Set());
   const [chatStates, setChatStates] = useState<Record<string, ChatState>>({});
 
@@ -746,7 +790,16 @@ export default function Home() {
     try {
       const res = await fetch("/api/circulars");
       const data = await res.json();
-      if (data.success) setCirculars(data.data);
+      if (data.success) {
+        setCirculars(data.data);
+        // Hydrate reviewed state from DB
+        const reviewedIds = new Set<string>(
+          (data.data as Circular[])
+            .filter((c) => c.reviewed === 1)
+            .map((c) => c.id)
+        );
+        setReviewed(reviewedIds);
+      }
     } finally {
       setInitialLoad(false);
     }
@@ -780,21 +833,32 @@ export default function Home() {
   const handleProcess = async () => {
     setProcessing(true);
     setStatusMsg("");
+    let totalProcessed = 0;
+    let totalErrors = 0;
+
     try {
-      const res = await fetch("/api/process", { method: "POST" });
-      const data = await res.json();
-      if (data.errors > 0) {
-        setStatusMsg(`${data.processed} analyzed, ${data.errors} failed`);
+      // Auto-loop: keep processing until nothing left (max 8 batches = 40 circulars)
+      for (let batch = 0; batch < 8; batch++) {
+        const res = await fetch("/api/process", { method: "POST" });
+        const data = await res.json();
+        totalProcessed += data.processed ?? 0;
+        totalErrors += data.errors ?? 0;
+
+        if ((data.processed ?? 0) === 0) break; // nothing left to process
+      }
+
+      if (totalErrors > 0) {
+        setStatusMsg(`${totalProcessed} analyzed, ${totalErrors} failed`);
       } else {
         setStatusMsg(
-          data.processed === 0
-            ? "Nothing new to process"
-            : `${data.processed} ${data.processed === 1 ? "circular" : "circulars"} analyzed`
+          totalProcessed === 0
+            ? "All circulars already analyzed"
+            : `${totalProcessed} ${totalProcessed === 1 ? "circular" : "circulars"} analyzed`
         );
       }
       await load();
     } catch {
-      setStatusMsg("Processing failed");
+      setStatusMsg("Processing failed — check API keys");
     } finally {
       setProcessing(false);
     }
@@ -840,7 +904,7 @@ export default function Home() {
     } catch {
       setChatStates((prev) => ({
         ...prev,
-        [circularId]: { response: null, loading: false, error: "Network error" },
+        [circularId]: { response: null, loading: false, error: "Network error — try again" },
       }));
     }
   };
@@ -862,14 +926,44 @@ export default function Home() {
       return s;
     });
 
-  const toggleReviewed = (id: string) =>
+  const toggleReviewed = async (id: string) => {
+    const wasReviewed = reviewed.has(id);
+    const nowReviewed = !wasReviewed;
+
+    // Optimistic update
     setReviewed((prev) => {
       const s = new Set(prev);
-      s.has(id) ? s.delete(id) : s.add(id);
+      nowReviewed ? s.add(id) : s.delete(id);
       return s;
     });
 
+    // Persist to DB
+    try {
+      const res = await fetch("/api/review", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, reviewed: nowReviewed }),
+      });
+      if (!res.ok) throw new Error("API error");
+    } catch {
+      // Rollback on failure
+      setReviewed((prev) => {
+        const s = new Set(prev);
+        wasReviewed ? s.add(id) : s.delete(id);
+        return s;
+      });
+    }
+  };
+
   // ── Derived ───────────────────────────────────────────────────────────────
+
+  const highCount = circulars.filter((c) => c.relevance === "HIGH").length;
+  const mediumCount = circulars.filter((c) => c.relevance === "MEDIUM").length;
+  const lowCount = circulars.filter((c) => c.relevance === "LOW").length;
+  const notRelevantCount = circulars.filter((c) => c.relevance === "NOT RELEVANT").length;
+  const analyzed = circulars.filter((c) => !!c.summary).length;
+  const unanalyzed = circulars.length - analyzed;
+  const unreviewedCount = circulars.length - reviewed.size;
 
   const filtered = circulars.filter((c) => {
     if (relevanceFilter !== "ALL" && c.relevance !== relevanceFilter) return false;
@@ -877,10 +971,6 @@ export default function Home() {
     if (reviewFilter === "unreviewed" && reviewed.has(c.id)) return false;
     return true;
   });
-
-  const highCount = circulars.filter((c) => c.relevance === "HIGH").length;
-  const analyzed = circulars.filter((c) => !!c.summary).length;
-  const unreviewedCount = circulars.length - reviewed.size;
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -892,7 +982,7 @@ export default function Home() {
           position: "sticky",
           top: 0,
           zIndex: 20,
-          background: "rgba(245,245,247,0.85)",
+          background: "rgba(245,245,247,0.92)",
           backdropFilter: "saturate(180%) blur(20px)",
           WebkitBackdropFilter: "saturate(180%) blur(20px)",
           borderBottom: "1px solid rgba(0,0,0,0.08)",
@@ -911,21 +1001,24 @@ export default function Home() {
           }}
         >
           <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-            <h1
-              style={{
-                fontSize: 16,
-                fontWeight: 600,
-                color: "#1D1D1F",
-                letterSpacing: "-0.02em",
-              }}
-            >
+            <h1 style={{ fontSize: 16, fontWeight: 600, color: "#1D1D1F", letterSpacing: "-0.02em" }}>
               Regulatory Intel
             </h1>
             <span style={{ fontSize: 12, color: "#9CA3AF" }}>Glomopay</span>
           </div>
 
           {statusMsg && (
-            <p style={{ fontSize: 12, color: "#6E6E73", flex: 1, textAlign: "center" }}>
+            <p
+              style={{
+                fontSize: 12,
+                color: statusMsg.includes("fail") || statusMsg.includes("error")
+                  ? "#D94F43"
+                  : "#6E6E73",
+                flex: 1,
+                textAlign: "center",
+                margin: 0,
+              }}
+            >
               {statusMsg}
             </p>
           )}
@@ -933,13 +1026,13 @@ export default function Home() {
           <div style={{ display: "flex", gap: 8 }}>
             <TopButton
               label="Fetch Updates"
-              loadingLabel="Fetching..."
+              loadingLabel="Fetching…"
               loading={fetching}
               onClick={handleFetch}
             />
             <TopButton
               label="Process AI"
-              loadingLabel="Processing..."
+              loadingLabel={`Analyzing…`}
               loading={processing}
               primary
               onClick={handleProcess}
@@ -949,34 +1042,38 @@ export default function Home() {
       </header>
 
       <main style={{ maxWidth: 880, margin: "0 auto", padding: "28px 28px 60px" }}>
-        {/* Stats */}
+        {/* Stats strip */}
         {circulars.length > 0 && (
           <div
             style={{
               display: "flex",
-              gap: 24,
+              gap: 0,
               marginBottom: 22,
-              padding: "14px 20px",
               background: "#FFFFFF",
               border: "1px solid #E5E5EA",
               borderRadius: 12,
+              overflow: "hidden",
             }}
           >
             {[
-              { label: "Total", value: circulars.length },
+              { label: "Total", value: circulars.length, color: "#1D1D1F" },
               { label: "High priority", value: highCount, color: "#D94F43" },
-              { label: "Analyzed", value: analyzed },
-              { label: "Unreviewed", value: unreviewedCount },
-            ].map(({ label, value, color }) => (
-              <div key={label} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                <span
-                  style={{
-                    fontSize: 20,
-                    fontWeight: 500,
-                    color: color ?? "#1D1D1F",
-                    letterSpacing: "-0.03em",
-                  }}
-                >
+              { label: "Analyzed", value: analyzed, color: "#1D1D1F" },
+              ...(unanalyzed > 0 ? [{ label: "Pending AI", value: unanalyzed, color: "#C4821A" }] : []),
+              { label: "Unreviewed", value: unreviewedCount, color: "#1D1D1F" },
+            ].map(({ label, value, color }, i, arr) => (
+              <div
+                key={label}
+                style={{
+                  flex: 1,
+                  padding: "14px 20px",
+                  borderRight: i < arr.length - 1 ? "1px solid #F0F0F3" : "none",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 2,
+                }}
+              >
+                <span style={{ fontSize: 20, fontWeight: 500, color, letterSpacing: "-0.03em" }}>
                   {value}
                 </span>
                 <span style={{ fontSize: 11, color: "#9CA3AF" }}>{label}</span>
@@ -1002,9 +1099,12 @@ export default function Home() {
               onChange={setRelevanceFilter}
               options={[
                 { value: "ALL", label: "All" },
-                { value: "HIGH", label: "High" },
-                { value: "MEDIUM", label: "Medium" },
-                { value: "LOW", label: "Low" },
+                { value: "HIGH", label: "High", count: highCount },
+                { value: "MEDIUM", label: "Medium", count: mediumCount },
+                { value: "LOW", label: "Low", count: lowCount },
+                ...(notRelevantCount > 0
+                  ? [{ value: "NOT RELEVANT" as RelevanceFilter, label: "N/R", count: notRelevantCount }]
+                  : []),
               ]}
             />
             <SegmentedControl<ReviewFilter>
@@ -1012,8 +1112,8 @@ export default function Home() {
               onChange={setReviewFilter}
               options={[
                 { value: "all", label: "All" },
-                { value: "unreviewed", label: "Unreviewed" },
-                { value: "reviewed", label: "Reviewed" },
+                { value: "unreviewed", label: "Unreviewed", count: unreviewedCount },
+                { value: "reviewed", label: "Reviewed", count: reviewed.size },
               ]}
             />
           </div>
@@ -1022,13 +1122,13 @@ export default function Home() {
           </span>
         </div>
 
-        {/* List */}
+        {/* Card list */}
         {initialLoad ? (
           <div style={{ textAlign: "center", padding: "100px 0", color: "#9CA3AF", fontSize: 13 }}>
-            Loading...
+            Loading…
           </div>
         ) : filtered.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "100px 0", color: "#9CA3AF" }}>
+          <div style={{ textAlign: "center", padding: "80px 0", color: "#9CA3AF" }}>
             <div
               style={{
                 width: 40,
@@ -1050,7 +1150,7 @@ export default function Home() {
             </p>
             <p style={{ fontSize: 13, color: "#9CA3AF" }}>
               {circulars.length === 0
-                ? 'Press "Fetch Updates" to pull the latest circulars.'
+                ? 'Click "Fetch Updates" to pull the latest circulars.'
                 : "Try adjusting the filters above."}
             </p>
           </div>

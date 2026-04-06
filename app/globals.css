@@ -1,5 +1,4 @@
-@import "tailwindcss";
-
+/* Base reset — no Tailwind dependency; all component styles are inline */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -20,7 +19,7 @@ body {
 }
 
 button { font-family: inherit; }
-a { color: inherit; }
+a { color: inherit; text-decoration: none; }
 
 /* Card expand transition */
 .card-expand {
@@ -30,6 +29,19 @@ a { color: inherit; }
 
 /* Chat input focus ring */
 .chat-input:focus {
+  outline: none;
   border-color: #007AFF;
   box-shadow: 0 0 0 3px rgba(0,122,255,0.12);
+}
+
+/* Scrollbar styling for chat areas */
+.chat-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.chat-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.chat-scroll::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.15);
+  border-radius: 2px;
 }
