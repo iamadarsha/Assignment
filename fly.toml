@@ -1,0 +1,36 @@
+# fly.toml — Regulatory Intel (Glomopay)
+# Generated for Fly.io deployment
+
+app = "glomopay-regulatory-intel"
+primary_region = "bom"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "3000"
+  NODE_ENV = "production"
+  NEXT_TELEMETRY_DISABLED = "1"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = "connections"
+    hard_limit = 25
+    soft_limit = 20
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1
+
+# Persistent volume — keeps SQLite DB and downloaded PDFs across deploys
+[[mounts]]
+  source = "regulatory_data"
+  destination = "/app/data"
+  initial_size = "1gb"
