@@ -81,11 +81,13 @@ export async function fetchSEBI(): Promise<Circular[]> {
     return circulars;
   } catch (err: any) {
     const status = err.response?.status;
+    const result: Circular[] = [];
     if (status === 403) {
       console.warn("[SEBI] Blocked by WAF (HTTP 403). Production use requires headless browser.");
+      (result as any)._warning = "Blocked by WAF (HTTP 403) — headless browser required in production";
     } else {
       console.error("[SEBI] Error:", err.message);
     }
-    return [];
+    return result;
   }
 }

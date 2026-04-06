@@ -1,8 +1,28 @@
 node_modules/
 .next/
 out/
+
+# Database & uploaded files (generated at runtime — never commit)
 data/
 *.db
+
+# Environment — real keys stay local, never committed
 .env.local
 .env*.local
+!.env.local.example
+
+# Tesseract OCR training data (large binary, downloaded at runtime)
+*.traineddata
+eng.traineddata
+
+# Build artefacts
+tsconfig.tsbuildinfo
+*.tsbuildinfo
+
+# OS
 .DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/

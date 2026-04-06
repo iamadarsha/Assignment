@@ -55,13 +55,15 @@ export async function fetchMCA(): Promise<Circular[]> {
   } catch (err: any) {
     // Akamai WAF returns 403 for server-side requests; Playwright required in production
     const status = err.response?.status;
+    const result: Circular[] = [];
     if (status === 403) {
       console.warn(
         "[MCA] Blocked by Akamai WAF (HTTP 403). Production use requires headless browser."
       );
+      (result as any)._warning = "Blocked by Akamai WAF (HTTP 403) — headless browser required in production";
     } else {
       console.error("[MCA] Error:", err.message);
     }
-    return [];
+    return result;
   }
 }

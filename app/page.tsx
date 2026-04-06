@@ -45,6 +45,13 @@ interface ChatState {
 type RelevanceFilter = "ALL" | "HIGH" | "MEDIUM" | "LOW" | "NOT RELEVANT";
 type ReviewFilter = "all" | "unreviewed" | "reviewed";
 
+interface SourceHealth {
+  source: string;
+  status: "ok" | "empty" | "error" | "blocked";
+  count: number;
+  error?: string;
+}
+
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 function parseList(json: string | null): string[] {
@@ -65,6 +72,14 @@ function formatDate(str: string): string {
 
 function hasDocContent(c: Circular): boolean {
   return !!(c.structured_chunks || c.extracted_text || c.content);
+}
+
+function formatTimeAgo(date: Date): string {
+  const secs = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (secs < 60) return "just now";
+  const mins = Math.floor(secs / 60);
+  if (mins < 60) return `${mins}m ago`;
+  return `${Math.floor(mins / 60)}h ago`;
 }
 
 // ─── Design tokens ──────────────────────────────────────────────────────────
@@ -484,7 +499,10 @@ function CircularCard({
           </span>
 
           {/* Expand chevron */}
-          <span style={{ fontSize: 10, color: "#C0BFC4", transition: "transform 200ms ease", display: "inline-block", transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)" }}>
+          <span
+            aria-hidden="true"
+            style={{ fontSize: 10, color: "#C0BFC4", transition: "transform 200ms ease", display: "inline-block", transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)" }}
+          >
             ▾
           </span>
         </div>
@@ -775,6 +793,8 @@ export default function Home() {
   const [fetching, setFetching] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [statusMsg, setStatusMsg] = useState("");
+  const [sourceHealth, setSourceHealth] = useState<SourceHealth[]>([]);
+  const [lastFetched, setLastFetched] = useState<Date | null>(null);
 
   const [relevanceFilter, setRelevanceFilter] = useState<RelevanceFilter>("ALL");
   const [reviewFilter, setReviewFilter] = useState<ReviewFilter>("all");
@@ -822,6 +842,8 @@ export default function Home() {
           ? "Already up to date"
           : `${data.inserted} new ${data.inserted === 1 ? "circular" : "circulars"} added`
       );
+      if (Array.isArray(data.sources)) setSourceHealth(data.sources);
+      setLastFetched(new Date());
       await load();
     } catch {
       setStatusMsg("Fetch failed — check connection");
@@ -993,11 +1015,12 @@ export default function Home() {
             maxWidth: 880,
             margin: "0 auto",
             padding: "0 28px",
-            height: 60,
+            minHeight: 60,
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            gap: 16,
+            gap: 12,
+            flexWrap: "wrap",
           }}
         >
           <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
@@ -1005,6 +1028,11 @@ export default function Home() {
               Regulatory Intel
             </h1>
             <span style={{ fontSize: 12, color: "#9CA3AF" }}>Glomopay</span>
+            {lastFetched && (
+              <span style={{ fontSize: 11, color: "#C0BFC4" }}>
+                · Updated {formatTimeAgo(lastFetched)}
+              </span>
+            )}
           </div>
 
           {statusMsg && (
@@ -1017,6 +1045,10 @@ export default function Home() {
                 flex: 1,
                 textAlign: "center",
                 margin: 0,
+                minWidth: 0,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
               }}
             >
               {statusMsg}
@@ -1079,6 +1111,55 @@ export default function Home() {
                 <span style={{ fontSize: 11, color: "#9CA3AF" }}>{label}</span>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Source health bar — shown after first fetch */}
+        {sourceHealth.length > 0 && (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              marginBottom: 14,
+              padding: "8px 14px",
+              background: "#FFFFFF",
+              border: "1px solid #E5E5EA",
+              borderRadius: 10,
+              flexWrap: "wrap",
+            }}
+          >
+            <span style={{ fontSize: 10, fontWeight: 600, color: "#9CA3AF", letterSpacing: "0.08em", textTransform: "uppercase", marginRight: 2 }}>
+              Sources
+            </span>
+            {sourceHealth.map((s) => {
+              const ok = s.status === "ok" || s.status === "empty";
+              const blocked = s.status === "blocked";
+              const errored = s.status === "error";
+              return (
+                <span
+                  key={s.source}
+                  title={s.error ?? (s.status === "empty" ? "No new items" : `${s.count} fetched`)}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 3,
+                    fontSize: 11,
+                    fontWeight: 500,
+                    padding: "2px 8px",
+                    borderRadius: 6,
+                    background: ok ? "#F0FDF4" : blocked ? "#FFFBEB" : "#FEF2F2",
+                    color: ok ? "#166534" : blocked ? "#92400E" : "#991B1B",
+                    border: `1px solid ${ok ? "#BBF7D0" : blocked ? "#FDE68A" : "#FECACA"}`,
+                  }}
+                >
+                  <span>{ok ? "✓" : blocked ? "⚠" : "✕"}</span>
+                  <span>{s.source}</span>
+                  {s.status === "blocked" && <span style={{ opacity: 0.7 }}>WAF</span>}
+                  {errored && <span style={{ opacity: 0.7 }}>err</span>}
+                </span>
+              );
+            })}
           </div>
         )}
 

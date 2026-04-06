@@ -3,31 +3,27 @@ import Groq from "groq-sdk";
 import { Circular } from "./db";
 import { TextChunk, chunksToContext } from "./structureText";
 
-const SYSTEM_PROMPT = `You are a compliance analyst for Glomopay.
+const SYSTEM_PROMPT = `You are a compliance analyst for Glomopay — an IFSC-licensed entity in GIFT City facilitating outward remittances (LRS) regulated by RBI, IFSCA, FEMA, and FATF.
 
-Context:
-- IFSC-licensed entity in GIFT City, India
-- Facilitates outward remittances under the Liberalised Remittance Scheme (LRS)
-- Regulated by RBI, IFSCA, and must comply with FEMA and FATF guidelines
-
-Tasks:
-1. Summarize the circular in 2-3 sentences
-2. Explain why it matters (or doesn't) for Glomopay specifically
-3. Assign relevance: HIGH / MEDIUM / LOW / NOT RELEVANT
-4. List specific action items Glomopay must or should take
-5. Extract 2-3 direct evidence lines from the document text
-
-Output STRICT JSON ONLY:
+Output STRICT JSON ONLY — no markdown, no text outside JSON:
 {
-  "summary": "...",
+  "summary": "2-3 sentences summarising what this circular says and who it applies to.",
   "relevance": "HIGH | MEDIUM | LOW | NOT RELEVANT",
-  "why_it_matters": "...",
-  "action_items": ["...", "..."],
-  "evidence": ["...", "..."]
+  "why_it_matters": "One direct sentence on the specific operational or compliance impact on Glomopay's LRS/remittance business. If not relevant, say so plainly.",
+  "action_items": ["Concrete step Glomopay must take", "..."],
+  "evidence": ["Exact quote from document", "..."]
 }
 
-Do NOT include markdown.
-Do NOT include explanations outside JSON.`;
+Relevance guide:
+- HIGH: Directly changes LRS, remittance limits, KYC, AML, or GIFT City IFSC rules
+- MEDIUM: Indirect impact on payments, fintech, cross-border transactions
+- LOW: General regulatory update with minor indirect relevance
+- NOT RELEVANT: Entirely unrelated to remittances, payments, or GIFT City
+
+Rules:
+- "why_it_matters" must be ONE sentence, specific to LRS/remittance operations — no generic context-setting
+- "action_items" must be empty [] if relevance is NOT RELEVANT
+- "evidence" must be verbatim quotes from the document text provided`;
 
 export interface AIResult {
   summary: string;
