@@ -862,30 +862,34 @@ export default function Home() {
     let totalErrors = 0;
 
     try {
-      // Auto-loop: keep processing until nothing left (max 8 batches = 40 circulars)
+      // Process in batches; refresh the list after EACH batch so analyzed
+      // circulars appear immediately without waiting for all batches to finish.
       for (let batch = 0; batch < 8; batch++) {
         const res = await fetch("/api/process", { method: "POST" });
         const data = await res.json();
-        totalProcessed += data.processed ?? 0;
+        const batchProcessed = data.processed ?? 0;
+        totalProcessed += batchProcessed;
         totalErrors += data.errors ?? 0;
 
-        if ((data.processed ?? 0) === 0) break; // nothing left to process
+        // Refresh list right away — user sees results as they come in
+        await load();
+
+        if (batchProcessed === 0) break; // nothing left to process
       }
 
-      if (totalErrors > 0) {
-        setStatusMsg(`${totalProcessed} analyzed, ${totalErrors} failed`);
-      } else {
-        setStatusMsg(
-          totalProcessed === 0
+      setStatusMsg(
+        totalErrors > 0
+          ? `${totalProcessed} analyzed, ${totalErrors} failed`
+          : totalProcessed === 0
             ? "All circulars already analyzed"
             : `${totalProcessed} ${totalProcessed === 1 ? "circular" : "circulars"} analyzed`
-        );
-      }
-      await load();
+      );
     } catch {
       setStatusMsg("Processing failed — check API keys");
     } finally {
+      // Always stop the spinner and do a final refresh
       setProcessing(false);
+      await load();
     }
   };
 
