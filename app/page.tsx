@@ -397,7 +397,10 @@ function CircularCard({
   const actionItems = parseList(circular.action_items);
   const evidence = parseList(circular.evidence);
   const isProcessed = !!circular.summary;
-  const canChat = hasDocContent(circular);
+  // Show chat for any circular that has been AI-processed OR has stored content.
+  // The backend has a 5-layer fallback (chunks → text → content → AI analysis → live fetch)
+  // so it can answer even when the full document body isn't in the DB.
+  const canChat = !!(circular.summary || hasDocContent(circular));
 
   return (
     <article
