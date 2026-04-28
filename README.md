@@ -17,6 +17,17 @@
 
 ---
 
+## Recruiter Quick Scan
+
+| Signal | Details |
+|---|---|
+| Product | AI regulatory monitoring desk for remittance/compliance teams |
+| What it demonstrates | Full-stack delivery, resilient scraping, document pipelines, AI fallback design, operator-grade workflow thinking |
+| Differentiator | Evidence-cited AI analysis rather than black-box summaries |
+| Stack | Next.js, React, TypeScript, SQLite, Gemini 2.5 Flash, Groq, PDF parsing, OCR |
+
+---
+
 ## 🎯 What is this?
 
 A **production-grade regulatory monitoring system** built for [Glomopay](https://glomopay.com), a GIFT City IFSC-licensed outward-remittance operator.
