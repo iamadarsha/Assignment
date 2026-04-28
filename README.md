@@ -27,6 +27,22 @@ Every day, RBI, IFSCA, MCA, SEBI, and FATF publish circulars. Most are noise. A 
 
 ---
 
+## 🧩 Product Snapshot
+
+| Layer | What ships | Portfolio signal |
+|---|---|---|
+| **Regulatory ingestion** | RBI RSS, IFSCA API, MCA, SEBI, and FATF fetchers with per-source health reporting. | Shows resilient data engineering around messy public-sector sources. |
+| **AI review desk** | Gemini 2.5 Flash analysis with Groq failover, action-item extraction, evidence quotes, and relevance scoring. | Demonstrates AI that is auditable, not just generative. |
+| **Compliance workflow** | Review filters, source badges, persisted reviewed state, and document Q&A with page-level citations. | Turns raw circulars into an operator-ready compliance queue. |
+
+## ✨ Demo Story
+
+1. Pull the latest regulatory updates from all five sources.
+2. Process each circular into relevance, summary, action items, and evidence.
+3. Filter to `HIGH`, ask questions against the source document, then mark it reviewed.
+
+---
+
 ## ✨ Features
 
 | | |
