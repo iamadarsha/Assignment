@@ -1,124 +1,142 @@
 <div align="center">
 
+<br/>
+
+```
+██████╗ ███████╗ ██████╗ ██╗   ██╗██╗      █████╗ ████████╗ ██████╗ ██████╗ ██╗   ██╗
+██╔══██╗██╔════╝██╔════╝ ██║   ██║██║     ██╔══██╗╚══██╔══╝██╔═══██╗██╔══██╗╚██╗ ██╔╝
+██████╔╝█████╗  ██║  ███╗██║   ██║██║     ███████║   ██║   ██║   ██║██████╔╝ ╚████╔╝
+██╔══██╗██╔══╝  ██║   ██║██║   ██║██║     ██╔══██║   ██║   ██║   ██║██╔══██╗  ╚██╔╝
+██║  ██║███████╗╚██████╔╝╚██████╔╝███████╗██║  ██║   ██║   ╚██████╔╝██║  ██║   ██║
+╚═╝  ╚═╝╚══════╝ ╚═════╝  ╚═════╝ ╚══════╝╚═╝  ╚═╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝   ╚═╝
+                                                                    INTEL
+```
+
 # 🛡️ Regulatory Intel
 
-### *AI compliance radar for cross-border remittance.*
+### *The AI compliance radar that never sleeps.*
 
-**Tracks every circular from RBI · IFSCA · MCA · SEBI · FATF — auto-classifies relevance, extracts action items, and lets compliance staff interrogate any document in plain English.**
+**Every circular from RBI · IFSCA · MCA · SEBI · FATF — auto-classified, action-extracted, and interrogatable in plain English.**
 
-[![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-assignment--ten--iota--73.vercel.app-000?style=for-the-badge)](https://assignment-ten-iota-73.vercel.app)
-[![Stack](https://img.shields.io/badge/Next.js_15-React_19-000?style=for-the-badge&logo=next.js)](#-tech-stack)
-[![AI](https://img.shields.io/badge/Gemini_2.5_Flash-→_Groq_LLaMA_3.3-f59e0b?style=for-the-badge)](#-features)
+<br/>
+
+[![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-Try_It_Now-22c55e?style=for-the-badge)](https://assignment-ten-iota-73.vercel.app)
+[![Next.js](https://img.shields.io/badge/Next.js_15-React_19-000000?style=for-the-badge&logo=next.js)](https://nextjs.org)
+[![AI](https://img.shields.io/badge/Gemini_2.5_Flash_→_Groq_LLaMA-Dual_AI-f59e0b?style=for-the-badge)](#-ai-pipeline)
 [![License](https://img.shields.io/badge/License-MIT-3b82f6?style=for-the-badge)](#-license)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178c6?style=for-the-badge&logo=typescript&logoColor=fff)](https://www.typescriptlang.org)
+[![SQLite](https://img.shields.io/badge/SQLite-better--sqlite3-044a64?style=for-the-badge&logo=sqlite)](https://sqlite.org)
 
-[**Live Demo**](https://assignment-ten-iota-73.vercel.app) · [**Features**](#-features) · [**Quick Start**](#-quick-start) · [**API**](#-api-reference) · [**Architecture**](./ARCHITECTURE.md)
+<br/>
+
+[**🚀 Live Demo**](https://assignment-ten-iota-73.vercel.app) · [**✨ Features**](#-features) · [**🧠 How It Works**](#-how-it-works) · [**⚡ Quick Start**](#-quick-start) · [**🔌 API**](#-api-reference) · [**📁 Structure**](#-project-structure)
+
+<br/>
+
+> *"Built for Glomopay — GIFT City's outward-remittance operator — as a production take-home assignment. Now open-sourced as a reference architecture for any fintech that needs auditable AI compliance tooling."*
 
 </div>
 
 ---
 
-## Recruiter Quick Scan
+## 🎯 The Problem
+
+Every business day, five Indian and global regulators publish circulars:
+
+```
+🏦 RBI        → Reserve Bank of India  
+🏛️ IFSCA      → International Financial Services Centres Authority  
+🏢 MCA        → Ministry of Corporate Affairs  
+📈 SEBI       → Securities and Exchange Board of India  
+🌐 FATF       → Financial Action Task Force  
+```
+
+Most circulars are noise. A handful change how a remittance company has to operate — **tomorrow morning**. Without a system like this, your compliance team spends hours manually sifting PDFs to find the two that actually matter.
+
+**Regulatory Intel fixes that.**
+
+---
+
+## ⚡ Recruiter Quick Scan
 
 | Signal | Details |
 |---|---|
-| Product | AI regulatory monitoring desk for remittance/compliance teams |
-| What it demonstrates | Full-stack delivery, resilient scraping, document pipelines, AI fallback design, operator-grade workflow thinking |
-| Differentiator | Evidence-cited AI analysis rather than black-box summaries |
-| Stack | Next.js, React, TypeScript, SQLite, Gemini 2.5 Flash, Groq, PDF parsing, OCR |
-
----
-
-## 🎯 What is this?
-
-A **production-grade regulatory monitoring system** built for [Glomopay](https://glomopay.com), a GIFT City IFSC-licensed outward-remittance operator.
-
-Every day, RBI, IFSCA, MCA, SEBI, and FATF publish circulars. Most are noise. A handful change how a remittance company has to operate — *tomorrow*. Regulatory Intel finds the signal, scores its relevance, and tells your compliance team exactly what to do next.
-
-> Built as a take-home assignment for the **Glomopay Full Stack Builder** role. Now public as a reference architecture for any fintech that needs auditable AI-assisted compliance tooling.
-
----
-
-## 🧩 Product Snapshot
-
-| Layer | What ships | Portfolio signal |
-|---|---|---|
-| **Regulatory ingestion** | RBI RSS, IFSCA API, MCA, SEBI, and FATF fetchers with per-source health reporting. | Shows resilient data engineering around messy public-sector sources. |
-| **AI review desk** | Gemini 2.5 Flash analysis with Groq failover, action-item extraction, evidence quotes, and relevance scoring. | Demonstrates AI that is auditable, not just generative. |
-| **Compliance workflow** | Review filters, source badges, persisted reviewed state, and document Q&A with page-level citations. | Turns raw circulars into an operator-ready compliance queue. |
-
-## ✨ Demo Story
-
-1. Pull the latest regulatory updates from all five sources.
-2. Process each circular into relevance, summary, action items, and evidence.
-3. Filter to `HIGH`, ask questions against the source document, then mark it reviewed.
+| 🏗️ **What it is** | Production-grade AI regulatory monitoring desk for cross-border remittance operators |
+| 🧠 **What it demonstrates** | Full-stack delivery · resilient scraping · document pipelines · AI fallback design · operator-grade workflow thinking |
+| 🔑 **Differentiator** | Evidence-cited AI analysis — every claim is grounded in a verbatim document quote with page-level citations |
+| 🛠️ **Stack** | Next.js 15 · React 19 · TypeScript · SQLite · Gemini 2.5 Flash · Groq LLaMA 3.3 · PDF parsing · Tesseract OCR |
+| 🚀 **Status** | Live on Vercel · fully functional · production patterns throughout |
 
 ---
 
 ## ✨ Features
 
-| | |
+### 🌐 Multi-Source Regulatory Ingestion
+```
+RBI (RSS feed)  ──────────────────────────────────┐
+IFSCA (JSON API) ─────────────────────────────────┤
+MCA (HTML scraper) ───────────────────────────────┼──▶  Parallel Fetcher  ──▶  SQLite DB
+SEBI (HTML scraper) ──────────────────────────────┤     fail-isolated
+FATF (HTML scraper) ──────────────────────────────┘
+```
+Each source runs independently — one blocked regulator never stops the others.
+
+### 🤖 AI Review Desk
+
+| Capability | What it does |
 |---|---|
-| 🌐 **Multi-source fetch** | RBI (RSS) · IFSCA (JSON API) · MCA · SEBI · FATF — parallel, fail-isolated |
-| 🎯 **AI relevance scoring** | `HIGH` / `MEDIUM` / `LOW` / `NOT_RELEVANT` with Glomopay-specific context |
-| ✅ **Action items** | Concrete compliance steps extracted from each circular |
-| 📚 **Evidence packs** | Verbatim document quotes grounding every AI claim |
-| 📄 **PDF pipeline** | Auto-download → `pdf-parse` → Tesseract OCR fallback |
-| 💬 **Document Q&A** | Ask any question; get an answer with **page-level citations** |
-| 🔖 **Review tracking** | Mark as reviewed; persists across sessions (SQLite-backed) |
-| 🩺 **Source health** | Per-source status after each fetch — `ok` / `empty` / `blocked` / `error` |
-| 🛟 **Degraded mode** | Gemini 2.5 Flash → Groq LLaMA 3.3 failover, surfaced in UI |
-| 🧹 **Deduplication** | `INSERT OR IGNORE` on URL — zero duplicates, ever |
+| 🎯 **Relevance scoring** | `HIGH` / `MEDIUM` / `LOW` / `NOT_RELEVANT` with Glomopay-specific context |
+| ✅ **Action extraction** | Concrete compliance steps extracted from each circular |
+| 📚 **Evidence packs** | Verbatim quotes from the source document grounding every AI claim |
+| 💬 **Document Q&A** | Ask any question; get answers with page-level citations |
+| 🛟 **AI fallback** | Gemini 2.5 Flash → Groq LLaMA 3.3 automatic failover, surfaced in UI |
 
----
+### 📄 Document Pipeline
 
-## 🚀 Quick Start
-
-### Prerequisites
-
-- Node.js 18+
-- `GEMINI_API_KEY` — [get one free](https://aistudio.google.com/app/apikey)
-- `GROQ_API_KEY` — [get one free](https://console.groq.com)
-
-### Install & run
-
-```bash
-git clone https://github.com/iamadarsha/Assignment.git
-cd Assignment
-npm install
-
-# Add API keys
-cat <<EOF >> .env.local
-GEMINI_API_KEY=your_key_here
-GROQ_API_KEY=your_key_here
-EOF
-
-npm run dev
-# → http://localhost:3000
+```
+Circular URL
+     │
+     ▼
+  PDF? ──yes──▶  pdf-parse  ──fails──▶  Tesseract OCR
+     │                                        │
+    no                                        │
+     │                                        │
+     ▼                                        ▼
+ HTML extraction                    Structured Chunks
+                                  (section + page metadata)
+                                         │
+                                         ▼
+                                  Gemini 2.5 Flash
+                                   relevance + actions
+                                         │
+                                   fails? Groq fallback
+                                         │
+                                         ▼
+                                  UI: scored cards + Q&A
 ```
 
-### Your first three minutes
-
-1. **Fetch Updates** → pulls latest circulars from all 5 sources in parallel
-2. **Process AI** → runs Gemini analysis (auto-loops until every circular is scored)
-3. Filter by **High** → review action items for your most urgent obligations
-4. Expand any card → **Ask This Document** to interrogate the full circular with citations
+### 🔖 Compliance Workflow
+- Review queue filtered by `HIGH` / `MEDIUM` / `LOW`
+- Persisted reviewed state across sessions (SQLite-backed)
+- Source health badges — `ok` / `empty` / `blocked` / `error` per regulator
+- Deduplication via `INSERT OR IGNORE` on URL — zero duplicate circulars, ever
 
 ---
 
-## 🧠 How it works
+## 🧠 How It Works
 
 ```mermaid
 flowchart LR
-    A[5 Regulator Sources<br/>RBI · IFSCA · MCA · SEBI · FATF] --> B[Parallel Fetcher<br/>fail-isolated]
-    B --> C[(SQLite<br/>circulars.db)]
+    A["5 Regulator Sources\nRBI · IFSCA · MCA · SEBI · FATF"] --> B["Parallel Fetcher\nfail-isolated"]
+    B --> C[("SQLite\ncirculars.db")]
     C --> D{PDF?}
-    D -->|yes| E[pdf-parse → OCR fallback]
-    D -->|no| F[HTML extraction]
-    E --> G[Structured Chunks<br/>section + page metadata]
+    D -->|yes| E["pdf-parse → OCR fallback"]
+    D -->|no| F["HTML extraction"]
+    E --> G["Structured Chunks\nsection + page metadata"]
     F --> G
-    G --> H[Gemini 2.5 Flash<br/>relevance + actions]
-    H -->|fails| I[Groq LLaMA 3.3<br/>fallback]
-    H --> J[UI: scored cards + Q&A]
+    G --> H["Gemini 2.5 Flash\nrelevance + actions"]
+    H -->|fails| I["Groq LLaMA 3.3\nfallback"]
+    H --> J["UI: scored cards + Q&A"]
     I --> J
 
     style A fill:#3b82f6,stroke:#fff,color:#fff
@@ -127,66 +145,114 @@ flowchart LR
     style J fill:#22c55e,stroke:#fff,color:#fff
 ```
 
+**Three steps to compliance clarity:**
+1. **Fetch Updates** → pulls latest circulars from all 5 sources in parallel
+2. **Process AI** → runs Gemini analysis (auto-loops until every circular is scored)
+3. **Filter → Review → Ask** → work only the `HIGH` signals, interrogate the source document with citations
+
+---
+
+## ⚡ Quick Start
+
+### Prerequisites
+
+- Node.js 18+
+- `GEMINI_API_KEY` — [get one free →](https://aistudio.google.com/app/apikey)
+- `GROQ_API_KEY` — [get one free →](https://console.groq.com)
+
+### Install & Run
+
+```bash
+# Clone the repo
+git clone https://github.com/iamadarsha/Finance-News-Analyser.git
+cd Finance-News-Analyser
+
+# Install dependencies
+npm install
+
+# Add your API keys
+cat <<EOF >> .env.local
+GEMINI_API_KEY=your_gemini_key_here
+GROQ_API_KEY=your_groq_key_here
+EOF
+
+# Start the dev server
+npm run dev
+# → http://localhost:3000
+```
+
+### Your First 3 Minutes
+
+```
+ Step 1  →  Click "Fetch Updates"     Pulls all 5 sources in parallel
+ Step 2  →  Click "Process AI"        Gemini scores every circular
+ Step 3  →  Filter to HIGH            Only the ones that matter
+ Step 4  →  Expand any card           Read action items + evidence
+ Step 5  →  "Ask This Document"       Interrogate the PDF with citations
+ Step 6  →  Mark as Reviewed         Clear the queue
+```
+
 ---
 
 ## 🔌 API Reference
 
-| Endpoint | Method | Description |
+| Method | Endpoint | What it does |
 |---|---|---|
-| `/api/circulars` | `GET` | All stored circulars with AI fields |
-| `/api/fetch` | `POST` | Scrape all 5 sources, insert new circulars |
-| `/api/process` | `POST` | AI-analyse the next batch of unprocessed circulars |
-| `/api/chat` | `POST` | `{ circularId, question }` → answer + evidence |
-| `/api/review` | `POST` | `{ id, reviewed: bool }` → persist review state |
+| `GET` | `/api/circulars` | All stored circulars with AI fields |
+| `POST` | `/api/fetch` | Scrape all 5 sources, insert new circulars |
+| `POST` | `/api/process` | AI-analyse the next batch of unprocessed circulars |
+| `POST` | `/api/chat` | `{ circularId, question }` → answer + evidence |
+| `POST` | `/api/review` | `{ id, reviewed: bool }` → persist review state |
 
 ---
 
 ## 📁 Project Structure
 
 ```
-app/
-  page.tsx                  # Main UI — single-page React
-  api/
-    circulars/route.ts      # GET all circulars
-    fetch/route.ts          # POST trigger scrape
-    process/route.ts        # POST trigger AI analysis
-    chat/route.ts           # POST document Q&A
-    review/route.ts         # POST toggle reviewed flag
-lib/
-  db.ts                     # SQLite schema, migrations, queries
-  fetchAll.ts               # Parallel fetcher orchestrator + source health
-  fetch{RBI,IFSCA,MCA,SEBI,FATF}.ts   # Per-source scrapers (WAF-aware)
-  processCircular.ts        # AI analysis — Gemini → Groq fallback
-  chatDocument.ts           # Document Q&A with chunk scoring + evidence
-  structureText.ts          # Text → chunks with section/page metadata
-  pdfPipeline.ts            # PDF download + parse + OCR
-data/
-  circulars.db              # SQLite DB (auto-created)
-  pdfs/                     # Downloaded PDFs (auto-created)
+📦 Finance-News-Analyser
+├── app/
+│   ├── page.tsx                        # Main UI — single-page React
+│   └── api/
+│       ├── circulars/route.ts          # GET all circulars
+│       ├── fetch/route.ts              # POST trigger scrape
+│       ├── process/route.ts            # POST trigger AI analysis
+│       ├── chat/route.ts               # POST document Q&A
+│       └── review/route.ts             # POST toggle reviewed flag
+├── lib/
+│   ├── db.ts                           # SQLite schema, migrations, queries
+│   ├── fetchAll.ts                     # Parallel fetcher orchestrator
+│   ├── fetchRBI.ts                     # RBI RSS scraper
+│   ├── fetchIFSCA.ts                   # IFSCA JSON API scraper
+│   ├── fetchMCA.ts                     # MCA HTML scraper (WAF-aware)
+│   ├── fetchSEBI.ts                    # SEBI HTML scraper (WAF-aware)
+│   ├── fetchFATF.ts                    # FATF HTML scraper
+│   ├── processCircular.ts              # AI analysis — Gemini → Groq fallback
+│   ├── chatDocument.ts                 # Document Q&A with chunk scoring
+│   ├── structureText.ts                # Text → chunks with metadata
+│   └── pdfPipeline.ts                  # PDF download + parse + OCR
+└── data/
+    ├── circulars.db                    # SQLite DB (auto-created)
+    └── pdfs/                           # Downloaded PDFs (auto-created)
 ```
 
 ---
 
 ## 🚢 Deployment
 
-### Vercel (one-command)
-
+### Vercel (One Command)
 ```bash
 npx vercel
-# Add GEMINI_API_KEY + GROQ_API_KEY in the dashboard
+# Add GEMINI_API_KEY + GROQ_API_KEY in the Vercel dashboard
 ```
+> SQLite data is ephemeral on Vercel's filesystem. See [ARCHITECTURE.md](./ARCHITECTURE.md) for the Postgres migration path.
 
-> SQLite data won't persist across Vercel deployments (ephemeral filesystem). See [ARCHITECTURE.md](./ARCHITECTURE.md) for the Postgres migration path.
-
-### Self-hosted Node.js
-
+### Self-Hosted Node.js
 ```bash
 npm run build && npm start
 # Data persists in ./data/circulars.db — back this up or mount as a volume
 ```
 
 ### Docker
-
 ```bash
 docker build -t regulatory-intel .
 docker run -p 3000:3000 \
@@ -196,28 +262,33 @@ docker run -p 3000:3000 \
   regulatory-intel
 ```
 
-A `fly.toml` is also included for [Fly.io](https://fly.io) deploys with persistent volumes.
+### Fly.io
+A `fly.toml` is included for persistent-volume deploys — ideal for keeping circular history across restarts.
 
 ---
 
 ## 🧰 Tech Stack
 
-| Layer | Tooling |
-|---|---|
-| **Frontend** | Next.js 15 · React 19 · TypeScript · Tailwind CSS |
-| **Backend** | Next.js Route Handlers · Node 18+ runtime |
-| **AI** | Gemini 2.5 Flash *(primary)* · Groq LLaMA 3.3 *(failover)* |
-| **Storage** | SQLite *(better-sqlite3)* · file-system PDF cache |
-| **Document pipeline** | `pdf-parse` · Tesseract.js *(OCR fallback)* |
-| **Hosting** | Vercel-ready · Docker-ready · Fly.io `fly.toml` included |
+| Layer | Tooling | Why |
+|---|---|---|
+| **Framework** | Next.js 15 + React 19 | App Router for clean route handlers + server components |
+| **Language** | TypeScript (strict) | Type safety across scraping, AI, and storage layers |
+| **AI Primary** | Gemini 2.5 Flash | Best-in-class document reasoning, free tier available |
+| **AI Fallback** | Groq LLaMA 3.3 | Sub-100ms inference as a failover, also free tier |
+| **Storage** | SQLite (better-sqlite3) | Zero-config, portable, perfect for single-writer compliance use |
+| **Document** | pdf-parse + Tesseract.js | Full PDF text + OCR for scanned regulators |
+| **Styling** | Tailwind CSS | Rapid operator-grade UI without a design system overhead |
+| **Hosting** | Vercel / Docker / Fly.io | Multiple deployment targets for demo + production |
 
 ---
 
 ## ⚠️ Known Limitations
 
-- **MCA & SEBI** sit behind Akamai/Cloudflare WAFs that block server-side requests. Fetchers degrade gracefully and surface block status in the UI. Production fix: scheduled Playwright job. See [HANDOVER.md](./HANDOVER.md).
-- **Single-writer SQLite** is sufficient for a prototype; migrate to Postgres for multi-user or concurrent writes.
-- **Previously-processed circulars** keep their old AI output until re-processed. A `/api/process?force=true` flag is the planned fix.
+| Issue | Detail | Production Fix |
+|---|---|---|
+| MCA & SEBI blocked | Akamai/Cloudflare WAFs block server-side requests | Scheduled Playwright job (see [HANDOVER.md](./HANDOVER.md)) |
+| SQLite single-writer | Fine for demos; breaks under concurrent writes | Migrate to Postgres |
+| Stale AI output | Previously-processed circulars keep old AI output | `/api/process?force=true` flag planned |
 
 ---
 
@@ -240,6 +311,14 @@ MIT — free to use, fork, and adapt.
 
 <div align="center">
 
-**Built by [Adarsha Chatterjee](https://github.com/iamadarsha) · [Portfolio →](https://github.com/iamadarsha/Lego-Portfolio)**
+<br/>
+
+**Built with precision by [Adarsha Chatterjee](https://www.linkedin.com/in/iamadarsha)**
+
+[![Portfolio](https://img.shields.io/badge/Portfolio-lego--portfolio--ochre.vercel.app-f59e0b?style=for-the-badge)](https://lego-portfolio-ochre.vercel.app)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-iamadarsha-0a66c2?style=for-the-badge&logo=linkedin&logoColor=fff)](https://www.linkedin.com/in/iamadarsha)
+[![GitHub](https://img.shields.io/badge/GitHub-iamadarsha-181717?style=for-the-badge&logo=github)](https://github.com/iamadarsha)
+
+*Regulatory Intel — because compliance is a product problem, not a spreadsheet problem.*
 
 </div>
